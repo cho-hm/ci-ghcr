@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2025 Cho-Hyunmin
+name: ci-ghcr
+
+on:
+  workflow_call:
+    inputs:
+      TRIGGER_TYPE: { type: string, required: true }
+      TRIGGER_BRANCH: { type: string, required: false }
+      GPG_REPO_URL: { type: string, required: false }
+      GPG_REPO_GPG_PATH: { type: string, required: false }
+      GPG_REPO_ASC_PATH: { type: string, required: false }
+      GPG_REPO_BRANCH: { type: string, required: false, default: master }
+    outputs:
+      CONTINUE:
+        value: ${{ jobs.check.outputs.CONTINUE }}
+
+jobs:
+  check:
+    env:
+      gTOKEN: ${{ secrets.GITHUB_TOKEN }}
+    name: check
+    runs-on: ubuntu-latest
+    outputs:
+      CONTINUE: ${{ steps.checking.outputs.CONTINUE }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: checking
+        name: checking...
+        env:
+          # inherit env
+          TRIGGER_TYPE: ${{ inputs.TRIGGER_TYPE }}
+          BRANCH_LIST: ${{ inputs.TRIGGER_BRANCH }}
+          GPG_REPO_URL: ${{ inputs.GPG_REPO_URL }}
+          GPG_REPO_ASC_PATH: ${{ inputs.GPG_REPO_ASC_PATH }}
+          GPG_REPO_GPG_PATH: ${{ inputs.GPG_REPO_GPG_PATH }}
+          GPG_REPO_BRANCH: ${{ inputs.GPG_REPO_BRANCH }}
+          # --
+
+          GPG_TOKEN: ${{ secrets.GPG_TOKEN || '' }}
+          DEFAULT_TRIGGER_TYPE: signed-tag
+        run: bash ./.github/workflows/scripts/main/index.sh

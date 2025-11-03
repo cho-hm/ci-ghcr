@@ -1,0 +1,73 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2025 Cho-Hyunmin
+name: parser
+on:
+  workflow_call:
+
+jobs:
+  parse:
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    runs-on: ubuntu-latest
+    outputs:
+      TRIGGER_TYPE: ${{ steps.props.outputs.TRIGGER_TYPE }}
+      TRIGGER_BRANCH: ${{ steps.props.outputs.TRIGGER_BRANCH }}
+      DOCKER_FILE_PATH: ${{ steps.props.outputs.DOCKER_FILE_PATH }}
+      GPG_REPO_URL: ${{ steps.props.outputs.GPG_REPO_URL }}
+      GPG_REPO_GPG_PATH: ${{ steps.props.outputs.GPG_REPO_GPG_PATH }}
+      GPG_REPO_ASC_PATH: ${{ steps.props.outputs.GPG_REPO_ASC_PATH }}
+      GPG_REPO_BRANCH: ${{ steps.props.outputs.GPG_REPO_BRANCH }}
+      BUILD_COMMAND: ${{ steps.props.outputs.BUILD_COMMAND }}
+      IMAGE_PLATFORM: ${{ steps.props.outputs.IMAGE_PLATFORM }}
+      GHCR_CHECKER: ${{ steps.props.outputs.GHCR_CHECKER }}
+      GHCR_BUILDER: ${{ steps.props.outputs.GHCR_BUILDER }}
+      IMAGE_NAME_SUFFIX_TRIGGER_TYPE: ${{ steps.props.outputs.IMAGE_NAME_SUFFIX_TRIGGER_TYPE }}
+      IMAGE_NAME_SUFFIX_TAG: ${{ steps.props.outputs.IMAGE_NAME_SUFFIX_TAG }}
+      IMAGE_NAME_SUFFIX_BRANCH: ${{ steps.props.outputs.IMAGE_NAME_SUFFIX_BRANCH }}
+      IMAGE_NAME_SUFFIX_SHA: ${{ steps.props.outputs.IMAGE_NAME_SUFFIX_SHA }}
+      IMAGE_NAME_SUFFIX_SHORT_SHA: ${{ steps.props.outputs.IMAGE_NAME_SUFFIX_SHORT_SHA }}
+      IMAGE_NAME_SUFFIX_LATEST: ${{ steps.props.outputs.IMAGE_NAME_SUFFIX_LATEST }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: '1'
+      - id: props
+        name: set properties
+        run: bash "${GITHUB_WORKSPACE}"/.github/workflows/scripts/parser/property-parser.sh
+
+  dispatch-to-checker:
+    name: dispatch to checker
+    needs: parse
+    uses: yule-test-ci/ci-to-ghcr/.github/workflows/ci-ghcr-checker.yml@v1
+#    uses: cho-hm/ci-ghcr/.github/workflows/ci-ghcr-checker.yml@v1
+    with:
+      # checker에서 필요한 프로퍼티들.
+      TRIGGER_TYPE: ${{ needs.parse.outputs.TRIGGER_TYPE }}
+      TRIGGER_BRANCH: ${{ needs.parse.outputs.TRIGGER_BRANCH }}
+      GPG_REPO_URL: ${{ needs.parse.outputs.GPG_REPO_URL }}
+      GPG_REPO_GPG_PATH: ${{ needs.parse.outputs.GPG_REPO_GPG_PATH }}
+      GPG_REPO_ASC_PATH: ${{ needs.parse.outputs.GPG_REPO_ASC_PATH }}
+      GPG_REPO_BRANCH: ${{ needs.parse.outputs.GPG_REPO_BRANCH }}
+    secrets: inherit
+
+  dispatch-to-builder:
+    name: dispatch to builder
+    needs: [ parse, dispatch-to-checker ]
+    if: ${{ needs.dispatch-to-checker.result == 'success' && needs.dispatch-to-checker.outputs.CONTINUE == 'true' }}
+    uses: yule-test-ci/ci-to-ghcr/.github/workflows/ci-ghcr-builder.yml@v1
+#    uses: cho-hm/ci-ghcr/.github/workflows/ci-ghcr-builder.yml@v1
+    with:
+      # builder에서 필요한 프로퍼티들
+      BUILD_COMMAND: ${{ needs.parse.outputs.BUILD_COMMAND }}
+      DOCKER_FILE_PATH: ${{ needs.parse.outputs.DOCKER_FILE_PATH }}
+      TRIGGER_TYPE: ${{ needs.parse.outputs.TRIGGER_TYPE }}
+      IMAGE_PLATFORM: ${{ needs.parse.outputs.IMAGE_PLATFORM }}
+      IMAGE_NAME_SUFFIX_TAG: ${{ needs.parse.outputs.IMAGE_NAME_SUFFIX_TAG }}
+      IMAGE_NAME_SUFFIX_BRANCH: ${{ needs.parse.outputs.IMAGE_NAME_SUFFIX_BRANCH }}
+      IMAGE_NAME_SUFFIX_SHA: ${{ needs.parse.outputs.IMAGE_NAME_SUFFIX_SHA }}
+      IMAGE_NAME_SUFFIX_SHORT_SHA: ${{ needs.parse.outputs.IMAGE_NAME_SUFFIX_SHORT_SHA }}
+      IMAGE_NAME_SUFFIX_LATEST: ${{ needs.parse.outputs.IMAGE_NAME_SUFFIX_LATEST }}
+      IMAGE_NAME_SUFFIX_TRIGGER_TYPE: ${{needs.parse.outputs.IMAGE_NAME_SUFFIX_TRIGGER_TYPE }}
+    secrets: inherit
+
+

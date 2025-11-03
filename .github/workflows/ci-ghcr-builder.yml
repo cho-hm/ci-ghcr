@@ -1,0 +1,102 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2025 Cho-Hyunmin
+name: ci-ghcr
+
+on:
+  workflow_call:
+    inputs:
+      BUILD_COMMAND:
+        type: string
+        required: false
+        default: ./gradlew clean test bootJar --no-daemon --refresh-dependencies -i
+      DOCKER_FILE_PATH:
+        type: string
+        required: true
+      TRIGGER_TYPE:
+        type: string
+        required: false
+        default: ''
+      IMAGE_PLATFORM:
+        type: string
+        required: false
+        default: linux/amd64,linux/arm64
+      IMAGE_NAME_SUFFIX_TAG:
+        type: string
+        required: false
+        default: false
+      IMAGE_NAME_SUFFIX_BRANCH:
+        type: string
+        required: false
+        default: false
+      IMAGE_NAME_SUFFIX_SHA:
+        type: string
+        required: false
+        default: true
+      IMAGE_NAME_SUFFIX_SHORT_SHA:
+        type: string
+        required: false
+        default: true
+      IMAGE_NAME_SUFFIX_LATEST:
+        type: string
+        required: false
+        default: false
+      IMAGE_NAME_SUFFIX_TRIGGER_TYPE:
+        type: string
+        required: false
+        default: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+      - name: Build bootJar
+        env:
+          GPR_USER: ${{ github.actor }}
+          GPR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BUILD_COMMAND: ${{ inputs.BUILD_COMMAND }}
+        run: ${BUILD_COMMAND}
+      - uses: docker/setup-buildx-action@v3
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: lower
+        name: to lowercase
+        run: |
+          lower_im="ghcr.io/${GITHUB_REPOSITORY,,}"
+          echo "LOWER_IMAGE_NAME=${lower_im}" >> "${GITHUB_OUTPUT}"
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ steps.lower.outputs.LOWER_IMAGE_NAME }}
+          tags: |
+            type=raw,value=${{ inputs.TRIGGER_TYPE }},enable=${{ inputs.IMAGE_NAME_SUFFIX_TRIGGER_TYPE == 'true' && inputs.TRIGGER_TYPE != '' }}
+            type=ref,event=tag,enable=${{ inputs.IMAGE_NAME_SUFFIX_TAG == 'true' }}
+            type=ref,event=branch,enable=${{ inputs.IMAGE_NAME_SUFFIX_BRANCH == 'true' }}
+            type=sha,format=long,enable=${{ inputs.IMAGE_NAME_SUFFIX_SHA == 'true' }}
+            type=sha,format=short,enable=${{ inputs.IMAGE_NAME_SUFFIX_SHORT_SHA == 'true' }}
+            type=raw,value=latest,enable=${{ inputs.IMAGE_NAME_SUFFIX_LATEST == 'true' }}
+      - name: push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ inputs.DOCKER_FILE_PATH }}
+          platforms: ${{ inputs.IMAGE_PLATFORM }}
+          push: true
+          provenance: false
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
