@@ -20,5 +20,5 @@ for x in "${LIST[@]}"; do
 done
 
 if "${not_in}"; then
-  return 52
+  return 54
 fi

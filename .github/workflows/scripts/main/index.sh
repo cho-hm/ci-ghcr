@@ -48,6 +48,7 @@ TRIGGER_TYPE_FILE="${MAP_FILE_TRIGGER_TYPE["${trigger_type}"]}"
   echo "=== $code"
 
   if(( "${code}" == 52 )); then echo "GPG_KEY REPO is EMPTY...";
+  elif(( "${code}" == 54 )); then echo "No matched branch";
   elif(( "${code}" == 53 )); then echo "No Signed Tag commit...";
   elif(( "${code}" == 57 )); then echo "Nothing valid GPG KEY in gpg repo...";
   elif(( "${code}" == 51 )); then echo "Can not connect to GPG REPO... Check GPG key... or else...";
