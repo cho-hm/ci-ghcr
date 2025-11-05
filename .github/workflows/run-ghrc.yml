@@ -11,5 +11,5 @@ jobs:
     permissions:
       contents: read
       packages: write
-    uses: yule-test-ci/ci-to-ghcr/.github/workflows/ci-ghcr-orchestrator.yml@v1
+    uses: cho-hm/ci-mvn/.github/workflows/ci-ghcr-orchestrator.yml@v1
     secrets: inherit
