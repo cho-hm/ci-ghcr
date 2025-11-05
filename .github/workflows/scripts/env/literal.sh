@@ -15,6 +15,6 @@ readonly sTRIGGER_TYPE="trigger.type"
 readonly sTRIGGER_BRANCH="trigger.branch"
 
 readonly CI_NAME="ghcr"
-readonly CI_FULL_NAME="ci-to-ghcr"
+readonly CI_FULL_NAME="ci-ghcr"
 
 

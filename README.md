@@ -26,7 +26,7 @@ git push ${YOUR_REMOTE} ${YOUR_REMOTE_MAIN_BRANCH}
 #### 리모트 `ci`프로젝트에 변경사항이 생긴 경우
 리모트에 `ci`프로젝트에 변경사항이 생긴 경우, 다음 명령을 통해 `submodule`을 `update`이후, `/ci-ghcr/init.sh`를 실행시킵니다.
 ```bash
-git submodule update --remote ci-to-ghcr && bash ./ci-to-ghcr/init.sh
+git submodule update --remote ci-ghcr && bash ./ci-ghcr/init.sh
 ```
 
 ### `source code` 다운로드시
