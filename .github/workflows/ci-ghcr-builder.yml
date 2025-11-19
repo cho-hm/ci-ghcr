@@ -64,7 +64,7 @@ jobs:
       - name: Build bootJar
         env:
           GPR_USER: ${{ github.actor }}
-          GPR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GPR_TOKEN: ${{ secrets.PAT || secrets.GITHUB_TOKEN }}
           BUILD_COMMAND: ${{ inputs.BUILD_COMMAND }}
         run: ${BUILD_COMMAND}
       - uses: docker/setup-buildx-action@v3

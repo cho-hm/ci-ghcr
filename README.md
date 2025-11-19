@@ -198,6 +198,10 @@ gpg.repo.branch=master
 
 
 ### 그 외
+#### `TOKEN`
+특정 권한이 추가적으로 부여된 토큰이 필요할 수 있습니다. 예를 들어, `build`를 수행할 때 다른 `private repo`에 배포된 `GPR`의 접근 권한이 필요할 수 있습니다. 
+이 경우, `GITHUB`의 `secrets`에 `PAT` 라는 이름으로 토큰을 등록한 경우, `build`시 해당 토큰을 우선 사용 합니다.
+> `Secrets and variables` - `Actions` - `Secrets` 에서 등록 할 수 있습니다. (`repo / organization` 단위로 설정 할 수 있습니다.)
 #### `Dockerfile`
 `Dockerfile`은 `GHCR`로 배포하기 위한 이미지를 생성할 때 사용되는 컨테이너에 대한 정의를 기재합니다.
 기본적으로는 8080포트를 `expose`하며, `${PROJECT_ROOT}/build/libs/*.jar` 를 기준으로 빌드합니다.
