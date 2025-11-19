@@ -11,5 +11,5 @@ jobs:
     permissions:
       contents: read
       packages: write
-    uses: cho-hm/ci-mvn/.github/workflows/ci-ghcr-orchestrator.yml@v1
+    uses: ./.github/workflows/ci-ghcr-orchestrator.yml
     secrets: inherit

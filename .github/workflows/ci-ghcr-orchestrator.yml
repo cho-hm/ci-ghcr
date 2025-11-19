@@ -38,7 +38,7 @@ jobs:
   dispatch-to-checker:
     name: dispatch to checker
     needs: parse
-    uses: cho-hm/ci-ghcr/.github/workflows/ci-ghcr-checker.yml@v1
+    uses: ./.github/workflows/ci-ghcr-checker.yml
     with:
       # checker에서 필요한 프로퍼티들.
       TRIGGER_TYPE: ${{ needs.parse.outputs.TRIGGER_TYPE }}
@@ -53,7 +53,7 @@ jobs:
     name: dispatch to builder
     needs: [ parse, dispatch-to-checker ]
     if: ${{ needs.dispatch-to-checker.result == 'success' && needs.dispatch-to-checker.outputs.CONTINUE == 'true' }}
-    uses: cho-hm/ci-ghcr/.github/workflows/ci-ghcr-builder.yml@v1
+    uses: ./.github/workflows/ci-ghcr-builder.yml
     with:
       # builder에서 필요한 프로퍼티들
       BUILD_COMMAND: ${{ needs.parse.outputs.BUILD_COMMAND }}
